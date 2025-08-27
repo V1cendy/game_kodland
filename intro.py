@@ -114,8 +114,7 @@ class Hero:
     def enemy_collision(self):
         if self.actor.colliderect(slime.actor):
             self.state = "dead"
-            
-    
+          
     def respawn(self):
         if self.lifes > 0:
             self.lifes -= 1
@@ -180,7 +179,7 @@ class Hero:
                 self.actor.image = self.dead_frames_left[self.current_frame]
             else:
                 self.actor.image = self.dead_frames[self.current_frame]
-
+    
     def draw(self):
         self.actor.draw()
 
@@ -248,7 +247,7 @@ class Enemy:
 
     def draw(self):
         self.actor.draw()
-        
+     
 class lifes:
     def __init__(self, x, y):
         self.actor = Actor("hearts_hud", (x, y))
@@ -405,4 +404,7 @@ def update():
             player.current_frame = 0
             player.frame_timer = 0
             player.actor.image = player.idle_frames[0]
+            life_hud_1.actor.image = "hearts_hud"
+            life_hud_2.actor.image = "hearts_hud"
+            life_hud_3.actor.image = "hearts_hud"
             game_state = "game"
