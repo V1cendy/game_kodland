@@ -113,8 +113,30 @@ class Hero:
                     self.vx = 0
     # Verificar colisão com o inimigo
     def enemy_collision(self):
+        global slime
+        if not slime:
+            return
         if self.actor.colliderect(slime.actor):
-            self.state = "dead"
+            # posição anterior do pé do herói (antes do movimento vertical)
+            prev_bottom = self.actor.bottom - self.vy
+            # se está caindo e antes do movimento estava acima da cabeça do slime -> stomp
+            if self.vy > 0 and prev_bottom <= slime.actor.top + 6:
+                # remover/neutralizar o slime (alternativa simples sem tocar na classe Enemy)
+                try:
+                    slime.actor.image = "slime_dead_anim_1"
+                except Exception:
+                    pass
+                slime.vx = 0
+                slime.vy = 0
+                # opcional: mover o slime para fora da tela para evitar novas colisões
+                slime.actor.topleft = (-1000, -1000)
+                # dar bounce no herói
+                self.vy = -10
+                self.on_ground = False
+                self.state = "jump_up"
+            else:
+                # colisão lateral/por baixo: o herói morre
+                self.state = "dead"
           
     def respawn(self):
         if self.lifes > 0:
@@ -203,7 +225,7 @@ class Enemy:
         self.patrol_min = x - 80
         self.patrol_max = x + 80
 
-        self.change_interval = random.randint(60, 180)
+        self.change_interval = random.randint(180, 320)
     def update(self):
         # Gravidade
         self.vy += 0.5
@@ -217,7 +239,8 @@ class Enemy:
 
         self.check_collision()
         self.animate()
-        self.patrol()
+        self.random_state()
+
     def check_collision(self):
         self.on_ground = False
         for tile in tiles:
@@ -239,6 +262,7 @@ class Enemy:
                 elif self.vx > 0 and self.actor.right >= tile.left and self.actor.right - self.vx <= tile.left:
                     self.actor.right = tile.left
                     self.vx = 0
+
     def animate(self):
         if self.state == "idle":
             self.frame_timer += 1
@@ -249,7 +273,18 @@ class Enemy:
                 self.actor.image = self.idle_frames_left[self.current_frame]
             else:
                 self.actor.image = self.idle_frames[self.current_frame]
+        if self.state == "patrol":
+            self.frame_timer += 1
+            if self.frame_timer >= 5:
+                self.frame_timer = 0
+                self.current_frame = (self.current_frame + 1) % len(self.idle_frames)
+            if self.direction == "left":
+                self.actor.image = self.idle_frames_left[self.current_frame]
+            else:
+                self.actor.image = self.idle_frames[self.current_frame]
+
     def patrol(self):
+        if self.state == "patrol":
             if self.actor.x <= self.patrol_min:
                 self.actor.x = self.patrol_min
                 self.direction = "right"
@@ -262,17 +297,17 @@ class Enemy:
                 self.vx = self.speed
             else:
                 self.vx = -self.speed
+
     def random_state(self):
-        self.timer += 1
-        if self.timer >= self.change_interval:
+        self.timer += 0.5
+        if self.timer >= 120:
             self.state = random.choice(["idle", "patrol"])
             self.timer = 0
-            self.change_interval = random.randint(60, 180)
-            # ajustar velocidade imediatamente ao trocar de estado
-            if self.state == "idle":
-                self.vx = 0
-            elif self.state == "patrol":
-                self.patrol()
+            # self.change_interval = random.randint(180, 320)
+        if self.state == "idle":
+            self.vx = 0
+        elif self.state == "patrol":
+            self.patrol()
     def draw(self):
         self.actor.draw()
      
@@ -310,6 +345,8 @@ player = Hero(40, 686)
 
 # --- SLIME ---
 slime = Enemy(600, 460)
+#slime_2 = Enemy(60, 200)
+#slime = Enemy(600, 460)
 
 # --- LIFE HUD --- 
 life_hud_1 = lifes(50, 50) 
