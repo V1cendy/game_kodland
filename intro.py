@@ -1,4 +1,5 @@
 import csv
+import random
 
 WIDTH = 1280
 HEIGHT = 736
@@ -193,12 +194,17 @@ class Enemy:
         self.current_frame = 0
         self.frame_timer = 0
         self.state = "idle"
+        self.timer = 0
 
         self.idle_frames = [f"slime_idle_anim_{i}" for i in range(1, 6)]
         self.idle_frames_left = [f"slime_idle_anim_left_{i}" for i in range(1, 6)]
 
+        self.speed = 2
+        self.patrol_min = x - 80
+        self.patrol_max = x + 80
+
+        self.change_interval = random.randint(60, 180)
     def update(self):
-        self.vx = 0
         # Gravidade
         self.vy += 0.5
         if self.vy > 10:
@@ -211,7 +217,7 @@ class Enemy:
 
         self.check_collision()
         self.animate()
-
+        self.patrol()
     def check_collision(self):
         self.on_ground = False
         for tile in tiles:
@@ -233,7 +239,6 @@ class Enemy:
                 elif self.vx > 0 and self.actor.right >= tile.left and self.actor.right - self.vx <= tile.left:
                     self.actor.right = tile.left
                     self.vx = 0
-
     def animate(self):
         if self.state == "idle":
             self.frame_timer += 1
@@ -244,7 +249,30 @@ class Enemy:
                 self.actor.image = self.idle_frames_left[self.current_frame]
             else:
                 self.actor.image = self.idle_frames[self.current_frame]
-
+    def patrol(self):
+            if self.actor.x <= self.patrol_min:
+                self.actor.x = self.patrol_min
+                self.direction = "right"
+                self.vx = self.speed
+            elif self.actor.x >= self.patrol_max:
+                self.actor.x = self.patrol_max
+                self.direction = "left"
+                self.vx = -self.speed
+            if self.direction == "right":
+                self.vx = self.speed
+            else:
+                self.vx = -self.speed
+    def random_state(self):
+        self.timer += 1
+        if self.timer >= self.change_interval:
+            self.state = random.choice(["idle", "patrol"])
+            self.timer = 0
+            self.change_interval = random.randint(60, 180)
+            # ajustar velocidade imediatamente ao trocar de estado
+            if self.state == "idle":
+                self.vx = 0
+            elif self.state == "patrol":
+                self.patrol()
     def draw(self):
         self.actor.draw()
      
@@ -281,7 +309,7 @@ game_state = "menu"
 player = Hero(40, 686)
 
 # --- SLIME ---
-slime = Enemy(550, 460)
+slime = Enemy(600, 460)
 
 # --- LIFE HUD --- 
 life_hud_1 = lifes(50, 50) 
