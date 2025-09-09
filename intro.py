@@ -2,7 +2,7 @@ import csv
 import random
 
 WIDTH = 1280
-HEIGHT = 736
+HEIGHT = 718
 tile_size = 18
 
 class Hero:
