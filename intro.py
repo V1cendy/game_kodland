@@ -1,9 +1,9 @@
 import csv
 import random
 
-WIDTH = 1280
-HEIGHT = 718
-tile_size = 18
+WIDTH = 1120
+HEIGHT = 640
+tile_size = 16
 
 class Hero:
     def __init__(self, x, y):
@@ -129,7 +129,7 @@ class Hero:
                 slime.vx = 0
                 slime.vy = 0
                 # opcional: mover o slime para fora da tela para evitar novas colisões
-                slime.actor.topleft = (-1000, -1000)
+                slime.actor.topleft = (-1000, 1000)
                 # dar bounce no herói
                 self.vy = -10
                 self.on_ground = False
@@ -141,7 +141,7 @@ class Hero:
     def respawn(self):
         if self.lifes > 0:
             self.lifes -= 1
-            self.actor.topleft = (40, 600)
+            self.actor.topleft = (40, 500)
             self.vx = 0
             self.vy = 0
             self.on_ground = True
@@ -221,6 +221,9 @@ class Enemy:
         self.idle_frames = [f"slime_idle_anim_{i}" for i in range(1, 6)]
         self.idle_frames_left = [f"slime_idle_anim_left_{i}" for i in range(1, 6)]
 
+        self.run_frames = [f"slime_walk_anim_{i}" for i in range(1, 16)]
+        self.run_frames_left = [f"slime_walk_anim_left_{i}" for i in range(1, 16)]
+
         self.speed = 2
         self.patrol_min = x - 80
         self.patrol_max = x + 80
@@ -266,7 +269,7 @@ class Enemy:
     def animate(self):
         if self.state == "idle":
             self.frame_timer += 1
-            if self.frame_timer >= 5:
+            if self.frame_timer >= 7:
                 self.frame_timer = 0
                 self.current_frame = (self.current_frame + 1) % len(self.idle_frames)
             if self.direction == "left":
@@ -274,14 +277,17 @@ class Enemy:
             else:
                 self.actor.image = self.idle_frames[self.current_frame]
         if self.state == "patrol":
+            prev_bottom = self.actor.bottom
             self.frame_timer += 1
-            if self.frame_timer >= 5:
+            if self.frame_timer >= 9:
                 self.frame_timer = 0
                 self.current_frame = (self.current_frame + 1) % len(self.idle_frames)
             if self.direction == "left":
-                self.actor.image = self.idle_frames_left[self.current_frame]
+                self.actor.image = self.run_frames_left[self.current_frame]
+                self.actor.bottom = prev_bottom
             else:
-                self.actor.image = self.idle_frames[self.current_frame]
+                self.actor.image = self.run_frames[self.current_frame]
+                self.actor.bottom = prev_bottom
 
     def patrol(self):
         if self.state == "patrol":
@@ -341,10 +347,10 @@ COLOR = (136, 170, 189)
 game_state = "menu"
 
 # --- HERO ---
-player = Hero(40, 686)
+player = Hero(40, 500)
 
 # --- SLIME ---
-slime = Enemy(600, 460)
+slime = Enemy(600, 400)
 #slime_2 = Enemy(60, 200)
 #slime = Enemy(600, 460)
 
@@ -353,28 +359,28 @@ life_hud_1 = lifes(50, 50)
 life_hud_2 = lifes(100, 50) 
 life_hud_3 = lifes(150, 50) 
 
+#--- BACKGROUND ---
+bg = Actor("background")
+
 # --- MAPA ---
 tile_images = {
-    1: 'tile_0001',
-    2: 'tile_0002',
-    3: 'tile_0003',
-    4: 'tile_0004',
-    20: 'tile_0020',
-    21: 'tile_0021',
-    22: 'tile_0022',
-    23: 'tile_0023',
-    27: 'tile_0027',
-    28: 'tile_0028',
-    47: 'tile_0047',
-    68: 'tile_0068',
-    87: 'tile_0087',
-    88: 'tile_0088',
-    120: 'tile_0120',
-    121: 'tile_0121',
-    123: 'tile_0123',
-    141: 'tile_0141',
-    142: 'tile_0142',
-    143: 'tile_0143',
+    0: 'tileset_01',
+    1: 'tileset_02',
+    2: 'tileset_03',
+    6: 'tileset_07',
+    7: 'tileset_08',
+    8: 'tileset_09',
+    12: 'tileset_13',
+    13: 'tileset_14',
+    14: 'tileset_15',
+    18: 'tileset_19',
+    20: 'tileset_21',
+    24: 'tileset_25',
+    25: 'tileset_26',
+    26: 'tileset_27',
+    27: 'tileset_28',
+    29: 'tileset_30',
+    30: 'tileset_31',
 }
 
 tiles = []
@@ -390,7 +396,7 @@ def load_map(mapa):
                     tile.topleft = (x * tile_size, y * tile_size)
                     tiles.append(tile)
 
-load_map("mapa.csv")
+load_map("map.csv")
 
 # --- DRAW ---
 def draw():
@@ -413,6 +419,7 @@ def draw_menu():
     screen.draw.text("EXIT", center=exit_button.center, fontsize=40, color="white")
 
 def draw_game():
+    bg.draw()
     for tile in tiles:
         tile.draw()
     player.draw()
