@@ -468,7 +468,7 @@ def update():
             print("Restarting game...")
             # Resetar jogador
             player.lifes = 3
-            player.actor.topleft = (40, 600)
+            player.actor.topleft = (40, 500)
             player.vx = 0
             player.vy = 0
             player.on_ground = True
