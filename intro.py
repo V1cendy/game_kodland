@@ -118,7 +118,7 @@ class Hero:
             self.vx = 0
 
     def respawn(self):
-        if self.lifes > 0:
+        if self.lifes > 1:
             self.lifes -= 1
             self.actor.topleft = (40, 500)
             self.vx = 0
