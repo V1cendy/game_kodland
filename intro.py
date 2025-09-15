@@ -111,6 +111,11 @@ class Hero:
                 elif self.vx > 0 and self.actor.right >= tile.left and self.actor.right - self.vx <= tile.left:
                     self.actor.right = tile.left
                     self.vx = 0
+        enemies = [slime_1, slime_2, slime_3]
+        if not all(getattr(e, "killed", False) for e in enemies) and self.actor.colliderect(VICTORY_ZONE):
+            print("kill the enemies first!")
+            self.actor.left = VICTORY_ZONE.right
+            self.vx = 0
 
     def respawn(self):
         if self.lifes > 0:
@@ -206,6 +211,7 @@ class Enemy:
         self.patrol_max = x + 80
 
         self.change_interval = random.randint(180, 320)
+        self.killed = False
     def update(self):
         if self.state == "dead":
             self.animate()
@@ -325,6 +331,7 @@ class Enemy:
                 self.vx = 0
                 self.vy = 0
                 self.state = "dead"
+                self.killed = True
                 self.current_frame = 0
                 self.frame_timer = 0
                 # dar bounce no herói
@@ -415,6 +422,7 @@ def load_map(mapa):
                     tiles.append(tile)
 
 load_map("map.csv")
+VICTORY_ZONE = Rect((0, 144), (16, 48))
 
 # --- DRAW ---
 def draw():
@@ -423,6 +431,8 @@ def draw():
         draw_menu()
     elif game_state == "game":
         draw_game()
+    elif game_state == "win":
+        draw_win()
     elif game_state == "game_over":
         draw_game_over()
 
@@ -433,9 +443,14 @@ def update():
         slime_1.update()
         slime_2.update()
         slime_3.update()
+        win_condition()
         heart_hud()
                     
     if game_state == "game_over":
+        if keyboard.r:
+            restart_game()
+    
+    if game_state == "win":
         if keyboard.r:
             restart_game()
 
@@ -464,6 +479,7 @@ def draw_menu():
 
 def draw_game():
     bg.draw()
+    screen.draw.filled_rect(VICTORY_ZONE, (203,145,128))
     for tile in tiles:
         tile.draw()
     player.draw()
@@ -474,44 +490,59 @@ def draw_game():
     life_hud_2.draw()
     life_hud_3.draw()
 
+def draw_win():
+    screen.fill((0, 0, 0))
+    screen.draw.text("YOU WIN!", center=(WIDTH // 2, HEIGHT // 2), fontsize=60, color="white")
+    screen.draw.text("Press R to Restart", center=(WIDTH // 2, HEIGHT // 2 + 50), fontsize=30, color="white")
+
 def draw_game_over():
     screen.fill((0, 0, 0))
     screen.draw.text("GAME OVER", center=(WIDTH // 2, HEIGHT // 2), fontsize=60, color="white")
     screen.draw.text("Press R to Restart", center=(WIDTH // 2, HEIGHT // 2 + 50), fontsize=30, color="white")
 
 def win_condition():
-    pass
+    global game_state
+    enemies = [slime_1, slime_2, slime_3]
+    print([(e.state, getattr(e,"killed", False)) for e in enemies])
+    if all(getattr(e, "killed", False) for e in enemies) and player.actor.colliderect(VICTORY_ZONE):
+        game_state = "win"
+        print("You Win!")
+
 def restart_game():
-        global game_state
-        print("Restarting game...")
-        # Resetar jogador
-        player.lifes = 3
-        player.actor.topleft = (40, 500)
-        player.vx = 0
-        player.vy = 0
-        player.on_ground = True
-        player.state = "idle"
-        slime_1.state = "idle"
-        slime_1.actor.center = (600, 400)
-        slime_2.state = "idle"
-        slime_2.actor.center = (600, 100)
-        slime_3.state = "idle"
-        slime_3.actor.center = (1000, 550)
-        player.current_frame = 0
-        player.frame_timer = 0
-        player.actor.image = player.idle_frames[0]
-        life_hud_1.actor.image = "hearts_hud"
-        life_hud_2.actor.image = "hearts_hud"
-        life_hud_3.actor.image = "hearts_hud"
-        game_state = "game"
+    global game_state
+    print("Restarting game...")
+    # Resetar jogador
+    player.lifes = 3
+    player.actor.topleft = (40, 500)
+    player.vx = 0
+    player.vy = 0
+    player.on_ground = True
+    player.state = "idle"
+    slime_1.state = "idle"
+    slime_1.killed = False
+    slime_1.actor.center = (600, 400)
+    slime_2.state = "idle"
+    slime_2.actor.center = (600, 100)
+    slime_2.killed = False
+    slime_3.state = "idle"
+    slime_3.actor.center = (1000, 550)
+    slime_3.killed = False
+    player.current_frame = 0
+    player.frame_timer = 0
+    player.actor.image = player.idle_frames[0]
+    life_hud_1.actor.image = "hearts_hud"
+    life_hud_2.actor.image = "hearts_hud"
+    life_hud_3.actor.image = "hearts_hud"
+    game_state = "game"
+
 def heart_hud():
-        if player.lifes == 3:
-            life_hud_3.update()
-        elif player.lifes == 2:
-            life_hud_3.draw_lost_heart()
-            life_hud_2.update()
-        elif player.lifes == 1:
-            life_hud_2.draw_lost_heart()
-            life_hud_1.update()
-        elif player.lifes == 0:
-            life_hud_1.draw_lost_heart()
+    if player.lifes == 3:
+        life_hud_3.update()
+    elif player.lifes == 2:
+        life_hud_3.draw_lost_heart()
+        life_hud_2.update()
+    elif player.lifes == 1:
+        life_hud_2.draw_lost_heart()
+        life_hud_1.update()
+    elif player.lifes == 0:
+        life_hud_1.draw_lost_heart()
