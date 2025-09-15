@@ -128,7 +128,7 @@ class Hero:
             self.current_frame = 0
             self.frame_timer = 0
             self.actor.image = self.idle_frames[0] if self.direction == "right" else self.idle_frames_left[0]
-            print(f"Lifes remaining: {self.lifes}")
+            #print(f"Lifes remaining: {self.lifes}")
         else:
             print("Game Over")
             global game_state
@@ -363,6 +363,24 @@ class lifes:
             self.actor.image = self.lost_hearts_frames[self.current_frame]
     def update(self):
         self.animate_lost_heart()
+
+class strange_door:
+    def __init__(self, x, y):
+        self.actor = Actor("strange_door_closed_anim_1", (x, y))
+        self.frame_timer = 0
+        self.current_frame = 0
+        self.state = "closed"
+        self.door_closed_frames = [f"strange_door_closed_anim_{i}" for i in range(1, 11)]
+    def draw(self):
+        self.actor.draw()
+    def animate(self):
+        self.frame_timer += 1
+        if self.frame_timer >= 7:
+            self.frame_timer = 0
+            self.current_frame = (self.current_frame + 1) % len(self.door_closed_frames)
+        self.actor.image = self.door_closed_frames[self.current_frame]
+    def update(self):
+        self.animate()
         
 # --- MENU ---
 start_button = Rect((270, 150),(300, 100))
@@ -423,6 +441,7 @@ def load_map(mapa):
 
 load_map("map.csv")
 VICTORY_ZONE = Rect((0, 144), (16, 48))
+door = strange_door(8, 168)
 
 # --- DRAW ---
 def draw():
@@ -445,6 +464,7 @@ def update():
         slime_3.update()
         win_condition()
         heart_hud()
+        door.update()
                     
     if game_state == "game_over":
         if keyboard.r:
@@ -480,6 +500,7 @@ def draw_menu():
 def draw_game():
     bg.draw()
     screen.draw.filled_rect(VICTORY_ZONE, (203,145,128))
+    door.draw()
     for tile in tiles:
         tile.draw()
     player.draw()
@@ -503,14 +524,14 @@ def draw_game_over():
 def win_condition():
     global game_state
     enemies = [slime_1, slime_2, slime_3]
-    print([(e.state, getattr(e,"killed", False)) for e in enemies])
+    #print([(e.state, getattr(e,"killed", False)) for e in enemies])
     if all(getattr(e, "killed", False) for e in enemies) and player.actor.colliderect(VICTORY_ZONE):
         game_state = "win"
         print("You Win!")
 
 def restart_game():
     global game_state
-    print("Restarting game...")
+    #print("Restarting game...")
     # Resetar jogador
     player.lifes = 3
     player.actor.topleft = (40, 500)
