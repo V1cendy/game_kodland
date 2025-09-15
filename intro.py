@@ -111,34 +111,7 @@ class Hero:
                 elif self.vx > 0 and self.actor.right >= tile.left and self.actor.right - self.vx <= tile.left:
                     self.actor.right = tile.left
                     self.vx = 0
-    # Verificar colisão com o inimigo
-    '''
-    def enemy_collision(self):
-        global slime
-        if not slime:
-            return
-        if self.actor.colliderect(slime.actor):
-            # posição anterior do pé do herói (antes do movimento vertical)
-            prev_bottom = self.actor.bottom - self.vy
-            # se está caindo e antes do movimento estava acima da cabeça do slime -> stomp
-            if self.vy > 0 and prev_bottom <= slime.actor.top + 6:
-                # remover/neutralizar o slime (alternativa simples sem tocar na classe Enemy)
-                try:
-                    slime.actor.image = "slime_dead_anim_1"
-                except Exception:
-                    pass
-                slime.vx = 0
-                slime.vy = 0
-                # opcional: mover o slime para fora da tela para evitar novas colisões
-                slime.actor.topleft = (-1000, 1000)
-                # dar bounce no herói
-                self.vy = -10
-                self.on_ground = False
-                self.state = "jump_up"
-            else:
-                # colisão lateral/por baixo: o herói morre
-                self.state = "dead"
-          '''
+
     def respawn(self):
         if self.lifes > 0:
             self.lifes -= 1
@@ -225,6 +198,9 @@ class Enemy:
         self.run_frames = [f"slime_walk_anim_{i}" for i in range(1, 16)]
         self.run_frames_left = [f"slime_walk_anim_left_{i}" for i in range(1, 16)]
 
+        self.dead_frames = [f"slime_death_anim_{i}" for i in range(1, 7)]
+        self.dead_frames_left = [f"slime_death_anim_left_{i}" for i in range(1, 7)]
+
         self.speed = 2
         self.patrol_min = x - 80
         self.patrol_max = x + 80
@@ -283,7 +259,7 @@ class Enemy:
                 self.actor.image = self.idle_frames_left[self.current_frame]
             else:
                 self.actor.image = self.idle_frames[self.current_frame]
-        if self.state == "patrol":
+        elif self.state == "patrol":
             prev_bottom = self.actor.bottom
             self.frame_timer += 1
             if self.frame_timer >= 9:
@@ -295,6 +271,15 @@ class Enemy:
             else:
                 self.actor.image = self.run_frames[self.current_frame]
                 self.actor.bottom = prev_bottom
+        elif self.state == "dead":
+            self.frame_timer += 1
+            if self.frame_timer >= 7:
+                self.frame_timer = 0
+                self.current_frame = (self.current_frame + 1) % len(self.dead_frames)
+            if self.direction == "left":
+                self.actor.image = self.dead_frames_left[self.current_frame]
+            else:
+                self.actor.image = self.dead_frames[self.current_frame]
 
     def patrol(self):
         if self.state == "patrol":
@@ -312,11 +297,15 @@ class Enemy:
                 self.vx = -self.speed
 
     def random_state(self):
+        previous = self.state
         self.timer += 0.5
         if self.timer >= 120:
             self.state = random.choice(["idle", "patrol"])
             self.timer = 0
-            # self.change_interval = random.randint(180, 320)
+        # reset de frames quando o estado muda para evitar index errors
+        if self.state != previous:
+            self.current_frame = 0
+            self.frame_timer = 0            
         if self.state == "idle":
             self.vx = 0
         elif self.state == "patrol":
@@ -325,6 +314,8 @@ class Enemy:
         self.actor.draw()
     
     def check_player_collision(self, player):
+        if self.state == "dead":
+            return
         if player.actor.colliderect(self.actor):
             # posição anterior do pé do herói (antes do movimento vertical)
             prev_bottom = player.actor.bottom - player.vy
@@ -333,8 +324,9 @@ class Enemy:
                 # remover/neutralizar o slime (alternativa simples sem tocar na classe Enemy)
                 self.vx = 0
                 self.vy = 0
-                # opcional: mover o slime para fora da tela para evitar novas colisões
-                self.actor.topleft = (-1000, 1000)
+                self.state = "dead"
+                self.current_frame = 0
+                self.frame_timer = 0
                 # dar bounce no herói
                 player.vy = -10
                 player.on_ground = False
@@ -375,10 +367,10 @@ game_state = "menu"
 # --- HERO ---
 player = Hero(40, 500)
 
-# --- SLIME ---
+# --- SLIMES ---
 slime_1 = Enemy(600, 400)
 slime_2 = Enemy(600, 100)
-slime_3 = Enemy(1000, 600)
+slime_3 = Enemy(1000, 550)
 
 # --- LIFE HUD --- 
 life_hud_1 = lifes(50, 50) 
@@ -434,6 +426,32 @@ def draw():
     elif game_state == "game_over":
         draw_game_over()
 
+def update():
+    global game_state
+    if game_state == "game":
+        player.update()
+        slime_1.update()
+        slime_2.update()
+        slime_3.update()
+        heart_hud()
+                    
+    if game_state == "game_over":
+        if keyboard.r:
+            restart_game()
+
+def on_mouse_down(pos):
+    global game_state
+    if game_state == "menu":
+        if start_button.collidepoint(pos):
+            game_state = "game"
+            sounds.confirmation_002.play()
+        elif sound_button.collidepoint(pos):
+            print("SOUND")
+            sounds.click_002.play()
+        elif exit_button.collidepoint(pos):
+            print("EXIT")
+            sounds.click_002.play()
+
 def draw_menu():
     screen.fill((79, 150, 189 ))
     screen.draw.filled_circle((1280, 700),700,(57, 108, 136))
@@ -460,28 +478,33 @@ def draw_game_over():
     screen.fill((0, 0, 0))
     screen.draw.text("GAME OVER", center=(WIDTH // 2, HEIGHT // 2), fontsize=60, color="white")
     screen.draw.text("Press R to Restart", center=(WIDTH // 2, HEIGHT // 2 + 50), fontsize=30, color="white")
-# --- INPUT ---
-def on_mouse_down(pos):
-    global game_state
-    if game_state == "menu":
-        if start_button.collidepoint(pos):
-            game_state = "game"
-            sounds.confirmation_002.play()
-        elif sound_button.collidepoint(pos):
-            print("SOUND")
-            sounds.click_002.play()
-        elif exit_button.collidepoint(pos):
-            print("EXIT")
-            sounds.click_002.play()
 
-def update():
-    global game_state
-    if game_state == "game":
-        player.update()
-        slime_1.update()
-        slime_2.update()
-        slime_3.update()
-        
+def win_condition():
+    pass
+def restart_game():
+        global game_state
+        print("Restarting game...")
+        # Resetar jogador
+        player.lifes = 3
+        player.actor.topleft = (40, 500)
+        player.vx = 0
+        player.vy = 0
+        player.on_ground = True
+        player.state = "idle"
+        slime_1.state = "idle"
+        slime_1.actor.center = (600, 400)
+        slime_2.state = "idle"
+        slime_2.actor.center = (600, 100)
+        slime_3.state = "idle"
+        slime_3.actor.center = (1000, 550)
+        player.current_frame = 0
+        player.frame_timer = 0
+        player.actor.image = player.idle_frames[0]
+        life_hud_1.actor.image = "hearts_hud"
+        life_hud_2.actor.image = "hearts_hud"
+        life_hud_3.actor.image = "hearts_hud"
+        game_state = "game"
+def heart_hud():
         if player.lifes == 3:
             life_hud_3.update()
         elif player.lifes == 2:
@@ -492,21 +515,3 @@ def update():
             life_hud_1.update()
         elif player.lifes == 0:
             life_hud_1.draw_lost_heart()
-            
-    if game_state == "game_over":
-        if keyboard.r:
-            print("Restarting game...")
-            # Resetar jogador
-            player.lifes = 3
-            player.actor.topleft = (40, 500)
-            player.vx = 0
-            player.vy = 0
-            player.on_ground = True
-            player.state = "idle"
-            player.current_frame = 0
-            player.frame_timer = 0
-            player.actor.image = player.idle_frames[0]
-            life_hud_1.actor.image = "hearts_hud"
-            life_hud_2.actor.image = "hearts_hud"
-            life_hud_3.actor.image = "hearts_hud"
-            game_state = "game"
