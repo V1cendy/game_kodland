@@ -88,7 +88,7 @@ class Hero:
         # Atualizar animação
         self.animate()
         # Verificar colisão com o inimigo
-        self.enemy_collision()
+        #self.enemy_collision()
 
     def check_collision(self):
         self.on_ground = False
@@ -112,6 +112,7 @@ class Hero:
                     self.actor.right = tile.left
                     self.vx = 0
     # Verificar colisão com o inimigo
+    '''
     def enemy_collision(self):
         global slime
         if not slime:
@@ -137,7 +138,7 @@ class Hero:
             else:
                 # colisão lateral/por baixo: o herói morre
                 self.state = "dead"
-          
+          '''
     def respawn(self):
         if self.lifes > 0:
             self.lifes -= 1
@@ -230,6 +231,11 @@ class Enemy:
 
         self.change_interval = random.randint(180, 320)
     def update(self):
+        if self.state == "dead":
+            self.animate()
+            if self.current_frame == len(self.dead_frames) - 1 and self.frame_timer == 0:
+                self.actor.topleft = (-1000, 1000)
+                return
         # Gravidade
         self.vy += 0.5
         if self.vy > 10:
@@ -243,6 +249,7 @@ class Enemy:
         self.check_collision()
         self.animate()
         self.random_state()
+        self.check_player_collision(player)
 
     def check_collision(self):
         self.on_ground = False
@@ -316,6 +323,25 @@ class Enemy:
             self.patrol()
     def draw(self):
         self.actor.draw()
+    
+    def check_player_collision(self, player):
+        if player.actor.colliderect(self.actor):
+            # posição anterior do pé do herói (antes do movimento vertical)
+            prev_bottom = player.actor.bottom - player.vy
+            # se está caindo e antes do movimento estava acima da cabeça do slime -> stomp
+            if player.vy > 0 and prev_bottom <= self.actor.top + 6:
+                # remover/neutralizar o slime (alternativa simples sem tocar na classe Enemy)
+                self.vx = 0
+                self.vy = 0
+                # opcional: mover o slime para fora da tela para evitar novas colisões
+                self.actor.topleft = (-1000, 1000)
+                # dar bounce no herói
+                player.vy = -10
+                player.on_ground = False
+                player.state = "jump_up"
+            else:
+                # colisão lateral/por baixo: o herói morre
+                player.state = "dead"
      
 class lifes:
     def __init__(self, x, y):
@@ -350,9 +376,9 @@ game_state = "menu"
 player = Hero(40, 500)
 
 # --- SLIME ---
-slime = Enemy(600, 400)
-#slime_2 = Enemy(60, 200)
-#slime = Enemy(600, 460)
+slime_1 = Enemy(600, 400)
+slime_2 = Enemy(600, 100)
+slime_3 = Enemy(1000, 600)
 
 # --- LIFE HUD --- 
 life_hud_1 = lifes(50, 50) 
@@ -423,7 +449,9 @@ def draw_game():
     for tile in tiles:
         tile.draw()
     player.draw()
-    slime.draw()
+    slime_1.draw()
+    slime_2.draw()
+    slime_3.draw()
     life_hud_1.draw()
     life_hud_2.draw()
     life_hud_3.draw()
@@ -450,7 +478,9 @@ def update():
     global game_state
     if game_state == "game":
         player.update()
-        slime.update()
+        slime_1.update()
+        slime_2.update()
+        slime_3.update()
         
         if player.lifes == 3:
             life_hud_3.update()
