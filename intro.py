@@ -45,13 +45,13 @@ class Hero:
             return
         
         self.vx = 0
-        if keyboard.a:
+        if keyboard.left:
             self.vx = -4
             self.direction = "left"
-        elif keyboard.d:
+        elif keyboard.right:
             self.vx = 4
             self.direction = "right"
-        if keyboard.w and self.on_ground:
+        if keyboard.up and self.on_ground:
             self.vy = -12
             self.on_ground = False
             self.on_jumping = True
@@ -371,16 +371,32 @@ class strange_door:
         self.current_frame = 0
         self.state = "closed"
         self.door_closed_frames = [f"strange_door_closed_anim_{i}" for i in range(1, 11)]
+        self.door_open_frames = [f"strange_door_opening_anim_{i}" for i in range(1, 15)]
     def draw(self):
         self.actor.draw()
     def animate(self):
-        self.frame_timer += 1
-        if self.frame_timer >= 7:
-            self.frame_timer = 0
-            self.current_frame = (self.current_frame + 1) % len(self.door_closed_frames)
-        self.actor.image = self.door_closed_frames[self.current_frame]
+        if self.state == "closed":
+            self.frame_timer += 1
+            if self.frame_timer >= 7:
+                self.frame_timer = 0
+                self.current_frame = (self.current_frame + 1) % len(self.door_closed_frames)
+            self.actor.image = self.door_closed_frames[self.current_frame]
+        else:
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame_timer = 0
+                if self.current_frame < len(self.door_open_frames) - 1:
+                    self.current_frame += 1
+            self.actor.image = self.door_open_frames[self.current_frame]
     def update(self):
-        self.animate()
+        enemies = [slime_1, slime_2, slime_3]
+        if all(getattr(e, "killed", False) for e in enemies):
+            self.state = "open"
+        if self.state == "open":
+            self.animate()
+            return
+        else:
+            self.animate()
         
 # --- MENU ---
 start_button = Rect((270, 150),(300, 100))
@@ -555,7 +571,14 @@ def restart_game():
     life_hud_1.actor.image = "hearts_hud"
     life_hud_2.actor.image = "hearts_hud"
     life_hud_3.actor.image = "hearts_hud"
-    game_state = "game"
+    door.state = "closed"
+    door.current_frame = 0
+    door.frame_timer = 0
+    door.actor.image = door.door_closed_frames[0]
+    if game_state == "win":
+        game_state = "menu"
+    if game_state == "game_over":
+        game_state = "game"
 
 def heart_hud():
     if player.lifes == 3:
