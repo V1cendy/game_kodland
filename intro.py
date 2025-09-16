@@ -557,25 +557,30 @@ def restart_game():
     player.vy = 0
     player.on_ground = True
     player.state = "idle"
+    player.current_frame = 0
+    player.frame_timer = 0
+    player.actor.image = player.idle_frames[0]
+    
     slime_1.state = "idle"
     slime_1.killed = False
     slime_1.actor.center = (600, 400)
     slime_1.current_frame = 0
+
     slime_2.state = "idle"
     slime_2.actor.center = (600, 100)
     slime_2.killed = False
     slime_2.current_frame = 0
+
     slime_3.state = "idle"
     slime_3.actor.center = (1000, 550)
     slime_3.killed = False
     slime_3.current_frame = 0
-    player.current_frame = 0
-    player.frame_timer = 0
-    player.actor.image = player.idle_frames[0]
+
     life_hud_1.actor.image = "hearts_hud"
     life_hud_2.actor.image = "hearts_hud"
     life_hud_3.actor.image = "hearts_hud"
     door.state = "closed"
+
     door.current_frame = 0
     door.frame_timer = 0
     door.actor.image = door.door_closed_frames[0]
