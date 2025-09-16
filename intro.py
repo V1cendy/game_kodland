@@ -303,19 +303,20 @@ class Enemy:
                 self.vx = -self.speed
 
     def random_state(self):
-        previous = self.state
-        self.timer += 0.5
-        if self.timer >= 120:
-            self.state = random.choice(["idle", "patrol"])
-            self.timer = 0
-        # reset de frames quando o estado muda para evitar index errors
-        if self.state != previous:
-            self.current_frame = 0
-            self.frame_timer = 0            
-        if self.state == "idle":
-            self.vx = 0
-        elif self.state == "patrol":
-            self.patrol()
+        if not self.state == "dead":
+            previous = self.state
+            self.timer += 0.5
+            if self.timer >= 120:
+                self.state = random.choice(["idle", "patrol"])
+                self.timer = 0
+            # reset de frames quando o estado muda para evitar index errors
+            if self.state != previous:
+                self.current_frame = 0
+                self.frame_timer = 0            
+            if self.state == "idle":
+                self.vx = 0
+            elif self.state == "patrol":
+                self.patrol()
     def draw(self):
         self.actor.draw()
     
@@ -559,12 +560,15 @@ def restart_game():
     slime_1.state = "idle"
     slime_1.killed = False
     slime_1.actor.center = (600, 400)
+    slime_1.current_frame = 0
     slime_2.state = "idle"
     slime_2.actor.center = (600, 100)
     slime_2.killed = False
+    slime_2.current_frame = 0
     slime_3.state = "idle"
     slime_3.actor.center = (1000, 550)
     slime_3.killed = False
+    slime_3.current_frame = 0
     player.current_frame = 0
     player.frame_timer = 0
     player.actor.image = player.idle_frames[0]
