@@ -45,13 +45,13 @@ class Hero:
             return
         
         self.vx = 0
-        if keyboard.left:
+        if keyboard.a:
             self.vx = -4
             self.direction = "left"
-        elif keyboard.right:
+        elif keyboard.d:
             self.vx = 4
             self.direction = "right"
-        if keyboard.up and self.on_ground:
+        if keyboard.w and self.on_ground:
             self.vy = -12
             self.on_ground = False
             self.on_jumping = True
@@ -484,6 +484,7 @@ def on_mouse_down(pos):
             print("SOUND")
             sounds.click_002.play()
         elif exit_button.collidepoint(pos):
+            exit()
             print("EXIT")
             sounds.click_002.play()
 
