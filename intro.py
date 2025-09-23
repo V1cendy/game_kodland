@@ -55,6 +55,8 @@ class Hero:
             self.vy = -12
             self.on_ground = False
             self.on_jumping = True
+            if music_on:
+                sounds.jump_1.play()
 
         # Gravidade
         self.vy += 0.5
@@ -87,8 +89,7 @@ class Hero:
         self.check_collision()
         # Atualizar animação
         self.animate()
-        # Verificar colisão com o inimigo
-        #self.enemy_collision()
+
 
     def check_collision(self):
         self.on_ground = False
@@ -134,6 +135,15 @@ class Hero:
             global game_state
             game_state = "game_over"
 
+    def restart(self):
+        self.lifes = 3
+        self.actor.topleft = (40, 500)
+        self.vx = 0
+        self.vy = 0
+        self.on_ground = True
+        self.state = "idle"
+        self.current_frame = 0
+        self.frame_timer = 0
 
     def animate(self):
         if self.state == "jump_up":
@@ -321,6 +331,7 @@ class Enemy:
         self.actor.draw()
     
     def check_player_collision(self, player):
+        global music_on
         if self.state == "dead":
             return
         if player.actor.colliderect(self.actor):
@@ -335,6 +346,8 @@ class Enemy:
                 self.killed = True
                 self.current_frame = 0
                 self.frame_timer = 0
+                if music_on:
+                    sounds.hurt_1.play()
                 # dar bounce no herói
                 player.vy = -10
                 player.on_ground = False
@@ -342,6 +355,11 @@ class Enemy:
             else:
                 # colisão lateral/por baixo: o herói morre
                 player.state = "dead"
+    def restart(self, x, y):
+        self.state = "idle"
+        self.killed = False
+        self.current_frame = 0
+        self.actor.center = (x, y)
      
 class lifes:
     def __init__(self, x, y):
@@ -364,6 +382,8 @@ class lifes:
             self.actor.image = self.lost_hearts_frames[self.current_frame]
     def update(self):
         self.animate_lost_heart()
+    def restart(self):
+        self.actor.image = "hearts_hud"
 
 class strange_door:
     def __init__(self, x, y):
@@ -398,7 +418,10 @@ class strange_door:
             return
         else:
             self.animate()
-        
+    def restart(self):
+        self.state = "closed"
+        self.current_frame = 0
+        self.frame_timer = 0        
 # --- MENU ---
 start_button = Rect((270, 150),(300, 100))
 sound_button = Rect((270, 300),(300, 100))
@@ -459,7 +482,8 @@ def load_map(mapa):
 load_map("map.csv")
 VICTORY_ZONE = Rect((0, 144), (16, 48))
 door = strange_door(8, 168)
-
+music_on = True
+music_playing = False
 # --- DRAW ---
 def draw():
     screen.clear()
@@ -474,6 +498,7 @@ def draw():
 
 def update():
     global game_state
+    musics()
     if game_state == "game":
         player.update()
         slime_1.update()
@@ -493,21 +518,30 @@ def update():
 
 def on_mouse_down(pos):
     global game_state
+    global music_on
     if game_state == "menu":
         if start_button.collidepoint(pos):
             game_state = "game"
-            sounds.confirmation_002.play()
+            if music_on:
+                sounds.confirmation_002.play()
         elif sound_button.collidepoint(pos):
             print("SOUND")
-            sounds.click_002.play()
+            if music_on:
+                sounds.click_002.play()
+            if music_on:
+                music_on = False
+                print(music_on)
+            elif not music_on:
+                music_on = True
+                print(music_on)
         elif exit_button.collidepoint(pos):
-            exit()
+            if music_on:
+                sounds.click_002.play()
             print("EXIT")
-            sounds.click_002.play()
+            exit()
 
 def draw_menu():
-    screen.fill((79, 150, 189 ))
-    screen.draw.filled_circle((1280, 700),700,(57, 108, 136))
+    bg.draw()
     screen.draw.filled_rect(start_button, COLOR)
     screen.draw.text("START", center=start_button.center, fontsize=40, color="white")
     screen.draw.filled_rect(sound_button, COLOR)
@@ -549,39 +583,18 @@ def win_condition():
 
 def restart_game():
     global game_state
-    #print("Restarting game...")
-    # Resetar jogador
-    player.lifes = 3
-    player.actor.topleft = (40, 500)
-    player.vx = 0
-    player.vy = 0
-    player.on_ground = True
-    player.state = "idle"
-    player.current_frame = 0
-    player.frame_timer = 0
+
+    player.restart()
     
-    slime_1.state = "idle"
-    slime_1.killed = False
-    slime_1.actor.center = (600, 400)
-    slime_1.current_frame = 0
+    slime_1.restart(600, 400)
+    slime_2.restart(600, 100)
+    slime_3.restart(1000, 550)
 
-    slime_2.state = "idle"
-    slime_2.actor.center = (600, 100)
-    slime_2.killed = False
-    slime_2.current_frame = 0
-
-    slime_3.state = "idle"
-    slime_3.actor.center = (1000, 550)
-    slime_3.killed = False
-    slime_3.current_frame = 0
-
-    life_hud_1.actor.image = "hearts_hud"
-    life_hud_2.actor.image = "hearts_hud"
-    life_hud_3.actor.image = "hearts_hud"
+    life_hud_1.restart()
+    life_hud_2.restart()
+    life_hud_3.restart()
     
-    door.state = "closed"
-    door.current_frame = 0
-    door.frame_timer = 0
+    door.restart()
 
     if game_state == "win":
         game_state = "menu"
@@ -599,3 +612,15 @@ def heart_hud():
         life_hud_1.update()
     elif player.lifes == 0:
         life_hud_1.draw_lost_heart()
+
+def musics():
+    global music_on, music_playing
+    music.set_volume(0.3)
+    if music_on:
+        if not music_playing:
+            music.play('music_test')
+            music_playing = True
+    else:
+        if music_playing:
+            music.stop()
+            music_playing = False
