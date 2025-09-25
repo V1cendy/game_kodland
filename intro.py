@@ -421,7 +421,8 @@ class strange_door:
     def restart(self):
         self.state = "closed"
         self.current_frame = 0
-        self.frame_timer = 0        
+        self.frame_timer = 0
+
 # --- MENU ---
 start_button = Rect((270, 150),(300, 100))
 sound_button = Rect((270, 300),(300, 100))
@@ -545,7 +546,10 @@ def draw_menu():
     screen.draw.filled_rect(start_button, COLOR)
     screen.draw.text("START", center=start_button.center, fontsize=40, color="white")
     screen.draw.filled_rect(sound_button, COLOR)
-    screen.draw.text("SOUND", center=sound_button.center, fontsize=40, color="white")
+    if music_on:
+        screen.draw.text("SOUND on", center=sound_button.center, fontsize=40, color="white")
+    else:
+        screen.draw.text("SOUND off", center=sound_button.center, fontsize=40, color="white")
     screen.draw.filled_rect(exit_button, COLOR)
     screen.draw.text("EXIT", center=exit_button.center, fontsize=40, color="white")
 
