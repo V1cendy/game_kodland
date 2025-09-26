@@ -9,7 +9,6 @@ class Hero:
     def __init__(self, x, y):
         self.actor = Actor("herochar_idle_anim_1", (x, y))
         self.lifes = 3
-        self.invincible = False
         self.vx = 0
         self.vy = 0
         self.on_ground = False
@@ -525,10 +524,8 @@ def on_mouse_down(pos):
             if music_on:
                 sounds.confirmation_002.play()
         elif sound_button.collidepoint(pos):
-            print("SOUND")
             if music_on:
                 sounds.click_002.play()
-            if music_on:
                 music_on = False
                 print(music_on)
             elif not music_on:
@@ -564,7 +561,7 @@ def draw_game():
     life_hud_3.draw()
 
 def draw_win():
-    screen.fill((0, 0, 0))
+    bg.draw()
     screen.draw.text("YOU WIN!", center=(WIDTH // 2, HEIGHT // 2), fontsize=60, color="white")
     screen.draw.text("Press R to Restart", center=(WIDTH // 2, HEIGHT // 2 + 50), fontsize=30, color="white")
 
@@ -576,7 +573,6 @@ def draw_game_over():
 def win_condition():
     global game_state
     enemies = [slime_1, slime_2, slime_3]
-    #print([(e.state, getattr(e,"killed", False)) for e in enemies])
     if all(getattr(e, "killed", False) for e in enemies) and player.actor.colliderect(VICTORY_ZONE):
         game_state = "win"
         print("You Win!")
