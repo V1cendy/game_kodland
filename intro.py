@@ -420,7 +420,8 @@ class strange_door:
     def restart(self):
         self.state = "closed"
         self.current_frame = 0
-        self.frame_timer = 0        
+        self.frame_timer = 0
+
 # --- MENU ---
 start_button = Rect((270, 150),(300, 100))
 sound_button = Rect((270, 300),(300, 100))
@@ -524,8 +525,10 @@ def on_mouse_down(pos):
             if music_on:
                 sounds.confirmation_002.play()
         elif sound_button.collidepoint(pos):
+            print("SOUND")
             if music_on:
                 sounds.click_002.play()
+            if music_on:
                 music_on = False
                 print(music_on)
             elif not music_on:
@@ -542,7 +545,10 @@ def draw_menu():
     screen.draw.filled_rect(start_button, COLOR)
     screen.draw.text("START", center=start_button.center, fontsize=40, color="white")
     screen.draw.filled_rect(sound_button, COLOR)
-    screen.draw.text("SOUND", center=sound_button.center, fontsize=40, color="white")
+    if music_on:
+        screen.draw.text("SOUND on", center=sound_button.center, fontsize=40, color="white")
+    else:
+        screen.draw.text("SOUND off", center=sound_button.center, fontsize=40, color="white")
     screen.draw.filled_rect(exit_button, COLOR)
     screen.draw.text("EXIT", center=exit_button.center, fontsize=40, color="white")
 
@@ -561,7 +567,7 @@ def draw_game():
     life_hud_3.draw()
 
 def draw_win():
-    bg.draw()
+    screen.fill((0, 0, 0))
     screen.draw.text("YOU WIN!", center=(WIDTH // 2, HEIGHT // 2), fontsize=60, color="white")
     screen.draw.text("Press R to Restart", center=(WIDTH // 2, HEIGHT // 2 + 50), fontsize=30, color="white")
 
@@ -573,6 +579,7 @@ def draw_game_over():
 def win_condition():
     global game_state
     enemies = [slime_1, slime_2, slime_3]
+    #print([(e.state, getattr(e,"killed", False)) for e in enemies])
     if all(getattr(e, "killed", False) for e in enemies) and player.actor.colliderect(VICTORY_ZONE):
         game_state = "win"
         print("You Win!")
