@@ -426,7 +426,7 @@ class strange_door:
 start_button = Rect((270, 150),(300, 100))
 sound_button = Rect((270, 300),(300, 100))
 exit_button = Rect((270, 450),(300, 100))
-COLOR = (136, 170, 189)
+COLOR = (31, 153, 131)
 game_state = "menu"
 
 # --- HERO ---
@@ -542,6 +542,8 @@ def on_mouse_down(pos):
 
 def draw_menu():
     bg.draw()
+    #screen.draw.text("All together now:\nCombining the above options", midbottom=(427,460), width=360, fontsize=48, color="#AAFF00", gcolor="#66AA00", owidth=1.5, ocolor="black", alpha=0.8)
+    screen.draw.text("ESCAPE THE SLIMES", center=(WIDTH // 2, 80), owidth=1.5, ocolor=(31,153,131), fontsize=60, color="white", gcolor="#66AA00")
     screen.draw.filled_rect(start_button, COLOR)
     screen.draw.text("START", center=start_button.center, fontsize=40, color="white")
     screen.draw.filled_rect(sound_button, COLOR)
