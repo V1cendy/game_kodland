@@ -30,9 +30,6 @@ class Hero:
         self.jump_down_frames = [f"herochar_jump_down_anim_{i}" for i in range(1, 4)]
         self.jump_down_frames_left = [f"herochar_jump_down_anim_left_{i}" for i in range(1, 4)]
 
-        self.jump_double_frames = [f"herochar_jump_double_anim_{i}" for i in range(1, 4)]
-        self.jump_double_frames_left = [f"herochar_jump_double_anim_{i}" for i in range(1, 4)]
-
         self.dead_frames = [f"herochar_death_anim_{i}" for i in range(1, 9)]
         self.dead_frames_left = [f"herochar_death_anim_left_{i}" for i in range(1, 9)]
 
@@ -507,14 +504,9 @@ def update():
         win_condition()
         heart_hud()
         door.update()
-                    
-    if game_state == "game_over":
-        if keyboard.r:
-            restart_game()
-    
-    if game_state == "win":
-        if keyboard.r:
-            restart_game()
+
+    if game_state == "game_over" or game_state == "win":
+        restart_game()            
 
 def on_mouse_down(pos):
     global game_state
@@ -542,8 +534,7 @@ def on_mouse_down(pos):
 
 def draw_menu():
     bg.draw()
-    #screen.draw.text("All together now:\nCombining the above options", midbottom=(427,460), width=360, fontsize=48, color="#AAFF00", gcolor="#66AA00", owidth=1.5, ocolor="black", alpha=0.8)
-    screen.draw.text("ESCAPE THE SLIMES", center=(WIDTH // 2, 80), owidth=1.5, ocolor=(31,153,131), fontsize=60, color="white", gcolor="#66AA00")
+    screen.draw.text("ESCAPE FROM THE SLIMES", center=(WIDTH // 2, 80), owidth=1.5, ocolor=(31,153,131), fontsize=60, color="white", gcolor="#66AA00")
     screen.draw.filled_rect(start_button, COLOR)
     screen.draw.text("START", center=start_button.center, fontsize=40, color="white")
     screen.draw.filled_rect(sound_button, COLOR)
@@ -569,19 +560,20 @@ def draw_game():
     life_hud_3.draw()
 
 def draw_win():
-    screen.fill((0, 0, 0))
-    screen.draw.text("YOU WIN!", center=(WIDTH // 2, HEIGHT // 2), fontsize=60, color="white")
+    bg.draw()
+    screen.draw.text("YOU WIN!", center=(WIDTH // 2, HEIGHT // 2), owidth=1.5, ocolor=(31,153,131), fontsize=60, color="white", gcolor="#66AA00")
     screen.draw.text("Press R to Restart", center=(WIDTH // 2, HEIGHT // 2 + 50), fontsize=30, color="white")
+    screen.draw.text("Press ESC to Menu", center=(WIDTH // 2, HEIGHT // 2 + 70), fontsize=30, color="white")
 
 def draw_game_over():
-    screen.fill((0, 0, 0))
-    screen.draw.text("GAME OVER", center=(WIDTH // 2, HEIGHT // 2), fontsize=60, color="white")
+    bg.draw()
+    screen.draw.text("GAME OVER", center=(WIDTH // 2, HEIGHT // 2), owidth=1.5, ocolor=(31,153,131), fontsize=60, color="white", gcolor="#66AA00")
     screen.draw.text("Press R to Restart", center=(WIDTH // 2, HEIGHT // 2 + 50), fontsize=30, color="white")
+    screen.draw.text("Press ESC to Menu", center=(WIDTH // 2, HEIGHT // 2 + 70), fontsize=30, color="white")
 
 def win_condition():
     global game_state
     enemies = [slime_1, slime_2, slime_3]
-    #print([(e.state, getattr(e,"killed", False)) for e in enemies])
     if all(getattr(e, "killed", False) for e in enemies) and player.actor.colliderect(VICTORY_ZONE):
         game_state = "win"
         print("You Win!")
@@ -601,10 +593,16 @@ def restart_game():
     
     door.restart()
 
-    if game_state == "win":
-        game_state = "menu"
     if game_state == "game_over":
-        game_state = "game"
+        if keyboard.r:
+            game_state = "game"
+        if keyboard.escape:
+            game_state = "menu"
+    if game_state == "win":
+        if keyboard.r:
+            game_state = "game"
+        if keyboard.escape:    
+            game_state = "menu"
 
 def heart_hud():
     if player.lifes == 3:
@@ -623,7 +621,7 @@ def musics():
     music.set_volume(0.3)
     if music_on:
         if not music_playing:
-            music.play('music_test')
+            music.play('music')
             music_playing = True
     else:
         if music_playing:
