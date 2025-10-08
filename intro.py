@@ -41,13 +41,13 @@ class Hero:
             return
         
         self.vx = 0
-        if keyboard.left:
+        if keyboard.a:
             self.vx = -4
             self.direction = "left"
-        elif keyboard.right:
+        elif keyboard.d:
             self.vx = 4
             self.direction = "right"
-        if keyboard.up and self.on_ground:
+        if keyboard.w and self.on_ground:
             self.vy = -12
             self.on_ground = False
             self.on_jumping = True
@@ -534,6 +534,8 @@ def on_mouse_down(pos):
 
 def draw_menu():
     bg.draw()
+    screen.draw.text("Controls:\nW to jump\nA/D to move", center=(850, HEIGHT // 2), owidth=1.5, ocolor=(31,153,131), fontsize=30, color="white", gcolor="#66AA00")
+    screen.draw.text("jump on the slimes to eliminate them", center=(850, HEIGHT // 2 + 100), owidth=1.5, ocolor=(31,153,131), fontsize=30, color="white", gcolor="#66AA00")
     screen.draw.text("ESCAPE FROM THE SLIMES", center=(WIDTH // 2, 80), owidth=1.5, ocolor=(31,153,131), fontsize=60, color="white", gcolor="#66AA00")
     screen.draw.filled_rect(start_button, COLOR)
     screen.draw.text("START", center=start_button.center, fontsize=40, color="white")
